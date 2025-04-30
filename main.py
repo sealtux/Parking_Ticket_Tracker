@@ -15,7 +15,7 @@ class MainWindow(QWidget):
         self.setWindowTitle("Main Window")
         self.setGeometry(0, 0, 1521, 1000) #window's size
 
-        button = QPushButton("Menu", self)# this adds a button for the menu
+        button = QPushButton("Menu", self)# this adds a button  
         button.setGeometry(0, 95, 250, 35)
         button.clicked.connect(self.openaddstudbutton)
         
