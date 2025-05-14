@@ -43,6 +43,8 @@ class MainWindow(QWidget):
         self.panel.setStyleSheet("background-color: white;")
 
 
+        
+        
         #table frame
         self.frame1 = MyCustomFrame(self)
         self.frame1.setGeometry(248, 78, 1500, 900)
@@ -143,14 +145,13 @@ class MainWindow(QWidget):
 
         button = QPushButton("Home", self)# this adds a button to the home page
         button.setGeometry(0, 95, 250, 35)
-        button.clicked.connect(self.show_home)
+        button.clicked.connect(self.show_home)#shows the add button
         #> Home icon
         Homeicon = QLabel(self)
         Homeicon.setGeometry(40,100,25,20)
         pixmap = QPixmap("Icons/Home.png")
         Homeicon.setPixmap(pixmap)
         Homeicon.setScaledContents(True)
-
 
         # Tables button
 
