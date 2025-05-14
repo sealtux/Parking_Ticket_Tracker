@@ -13,8 +13,10 @@ from PyQt6.QtCore import QTimer
 from PyQt6.QtCore import Qt,QSize
 
 from PyQt6.QtGui import QMovie
+
 from Frames.Table import MyCustomFrame
 from Frames.saves import savecustom
+from Frames.transaction import Transactionsframe
 
 
 class MainWindow(QWidget):
@@ -49,22 +51,21 @@ class MainWindow(QWidget):
         #saves frame
         self.saveframe = savecustom(self)
         self.saveframe.setGeometry(248, 78, 1500, 900)
-        
 
-        #default
+
+        self.trasactframe = Transactionsframe(self)
+        self.trasactframe.setGeometry(248, 78, 1500, 900)
+
+        #default hide
         self.panel.show()
         self.frame1.hide()
         self.saveframe.hide()
+        self.trasactframe.hide()
 
 
 
 
     
-        
-     
-      
-
-        
      
 
 
@@ -72,6 +73,7 @@ class MainWindow(QWidget):
       self.frame1.hide()
       self.panel.show()
       self.saveframe.hide()
+      self.trasactframe.hide()
       print("button clicked")
     
 
@@ -81,6 +83,7 @@ class MainWindow(QWidget):
         self.panel.hide()
         self.frame1.show()
         self.saveframe.hide()
+        self.trasactframe.hide()
         print("button clicked1")
        
 
@@ -89,10 +92,25 @@ class MainWindow(QWidget):
         self.panel.hide()
         self.frame1.hide()
         self.saveframe.show()
+        self.trasactframe.hide()
         print("button clicked2")
 
 
+    def show_transaction(self):
+        self.panel.hide()
+        self.panel.hide()
+        self.frame1.hide()
+        self.saveframe.hide()
+        self.trasactframe.show()
+        print("button clicked3")
     
+    
+
+
+    
+
+
+
     def _init_bars(self):
         self.dashboard = QFrame(self)
         self.dashboard.setGeometry(0, 0, 2000, 80)
@@ -108,6 +126,7 @@ class MainWindow(QWidget):
 
 
     def _init_sidebar(self):
+
         #sets the logo
         logotext = QLabel(self)
         logotext.setText("Ticket Pad")
@@ -120,8 +139,8 @@ class MainWindow(QWidget):
         
 
 
-
         # Home button
+
         button = QPushButton("Home", self)# this adds a button to the home page
         button.setGeometry(0, 95, 250, 35)
         button.clicked.connect(self.show_home)
@@ -134,6 +153,7 @@ class MainWindow(QWidget):
 
 
         # Tables button
+
         Tablebutton = QPushButton("Tables",self.cornerboard) #this adds a button to the table page
         Tablebutton.setGeometry(0,170,250,35)
         Tablebutton.clicked.connect(self.show_table)#this adds a function to a button when being clicked
@@ -147,6 +167,7 @@ class MainWindow(QWidget):
 
 
         #Save button
+
         Savebutton = QPushButton("Saves",self.cornerboard)
         Savebutton.setGeometry(0,240,250,35)
         Savebutton.clicked.connect(self.show_saves)
@@ -158,7 +179,20 @@ class MainWindow(QWidget):
         saveicon.setScaledContents(True)
 
 
+        #Transaction button
 
+        Transaction = QPushButton("        Transactions",self.cornerboard)
+        Transaction.setGeometry(0,310,250,35)
+        Transaction.clicked.connect(self.show_transaction)
+        #> transaction
+        transactionicon = QLabel(self)
+        transactionicon.setGeometry(40,315,25,20)
+        transactionmap = QPixmap("Icons/Money.png")
+        transactionicon.setPixmap(transactionmap)
+        transactionicon.setScaledContents(True)
+
+
+        
         
 
 
@@ -170,6 +204,20 @@ class MainWindow(QWidget):
         #boarder-radius:15px; this is used to add corners on your frame
         #Made the button transparent and added a hover 
         button.setStyleSheet("""
+        
+        QPushButton {
+            font-family: "Neuton";
+            font-size: 14pt;
+            color: #6D6B6B;
+            background: transparent;
+            border: none;
+        }
+        QPushButton:hover {
+            color: #FFFFFF;
+        }
+        """)
+
+        Transaction.setStyleSheet("""
         
         QPushButton {
             font-family: "Neuton";
