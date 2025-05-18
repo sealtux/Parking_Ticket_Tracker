@@ -18,7 +18,7 @@ from Frames.Table import MyCustomFrame
 from Frames.saves import savecustom
 from Frames.transaction import Transactionsframe
 
-
+import logic.DB
 class MainWindow(QWidget):
     
     def __init__(self):
@@ -142,7 +142,6 @@ class MainWindow(QWidget):
 
 
         # Home button
-
         button = QPushButton("Home", self)# this adds a button to the home page
         button.setGeometry(0, 95, 250, 35)
         button.clicked.connect(self.show_home)#shows the add button
@@ -153,8 +152,8 @@ class MainWindow(QWidget):
         Homeicon.setPixmap(pixmap)
         Homeicon.setScaledContents(True)
 
-        # Tables button
 
+        # Tables button
         Tablebutton = QPushButton("Tables",self.cornerboard) #this adds a button to the table page
         Tablebutton.setGeometry(0,170,250,35)
         Tablebutton.clicked.connect(self.show_table)#this adds a function to a button when being clicked
@@ -168,7 +167,6 @@ class MainWindow(QWidget):
 
 
         #Save button
-
         Savebutton = QPushButton("Saves",self.cornerboard)
         Savebutton.setGeometry(0,240,250,35)
         Savebutton.clicked.connect(self.show_saves)
@@ -181,10 +179,10 @@ class MainWindow(QWidget):
 
 
         #Transaction button
-
         Transaction = QPushButton("        Transactions",self.cornerboard)
         Transaction.setGeometry(0,310,250,35)
         Transaction.clicked.connect(self.show_transaction)
+
         #> transaction
         transactionicon = QLabel(self)
         transactionicon.setGeometry(40,315,25,20)
@@ -192,6 +190,8 @@ class MainWindow(QWidget):
         transactionicon.setPixmap(transactionmap)
         transactionicon.setScaledContents(True)
 
+
+        
 
         
         
@@ -272,7 +272,12 @@ class MainWindow(QWidget):
        
         
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+    try:
+        app = QApplication(sys.argv)
+        window = MainWindow()
+
+
+        window.show()
+        sys.exit(app.exec())
+    except Exception as e:
+        print("Error during launch:", e)

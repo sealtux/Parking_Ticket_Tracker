@@ -9,7 +9,7 @@ import sys
 class MyCustomFrame(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
-
+        #initialization{
         self.panel = QLabel(self)
         self.panel.setFrameShape(QFrame.Shape.StyledPanel)
         self.panel.setGeometry(0, 0, 1300, 850) #change the position
@@ -31,21 +31,43 @@ class MyCustomFrame(QFrame):
         self.search_bar.setGeometry(680, 30, 300, 45)
         
 
-
+        self.deletebutton = QPushButton(" Delete", self.panel)
+        self.deletebutton.setGeometry(200,30,100,45)
+        self.deletebutton.clicked.connect(self.remove_val)
+        #sets the remove icon
+        removeicon = QIcon("Icons/Remove.png")
+        self.deletebutton.setIcon(removeicon)
+        self.deletebutton.setIconSize(QSize(14, 14))
         
-
+        #sets the remove icon
+        self.savebutton = QPushButton(" Save", self.panel)
+        self.savebutton.setGeometry(50,30,100,45)
+        self.savebutton.clicked.connect(self.save_value)
+        #sets the remove icon
+        saveicon = QIcon("Icons/import.png")
+        self.savebutton.setIcon(saveicon)
+        self.savebutton.setIconSize(QSize(14, 14))
 
         # Apply a white background
         self.table = QTableWidget(self)
         
+
+
+        #}
+
+
+
+
+
         #row count
         self.table.setRowCount(10)  
-        self.table.setColumnCount(3) 
+        self.table.setColumnCount(5) 
         #sets the header text
-        self.table.setHorizontalHeaderLabels(["Ticket ID", "Entry Time","Payment"])
-        shadow = QGraphicsDropShadowEffect(self)
+        self.table.setHorizontalHeaderLabels(["Vehicle Type","Ticket ID", "Entry Time","Payment","Date"])
+       
 
         #sets the shadow{
+        shadow = QGraphicsDropShadowEffect(self)
         shadow.setBlurRadius(10)
         shadow.setXOffset(1)
         shadow.setYOffset(1)
@@ -53,16 +75,16 @@ class MyCustomFrame(QFrame):
 
         self.table.setGraphicsEffect(shadow)
         
-        #}
+        
 
         #sets the scrollbar for the table
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
 
-         #set size for the height for the incrementer
+         #set size for the height for the row
         self.table.verticalHeader().setDefaultSectionSize(50)
-        #set size for the width for row
 
+        #set size for the width for row
         self.table.horizontalHeader().setFixedHeight(60)
         
         #sets the header size
@@ -104,7 +126,7 @@ class MyCustomFrame(QFrame):
         #hides the line in the table
         self.table.setShowGrid(False)
 
-# Define your two colors via stylesheet (or via palette)
+        # Define your two colors via stylesheet (or via palette)
         self.table.setStyleSheet("""
     QTableWidget {
         background-color: #E8E7DD;            /* rows with even index (0,2,4…) */
@@ -146,6 +168,43 @@ QTableWidget::item:focus {
    
     
 """)    
+        self.deletebutton.setStyleSheet("""
+  QPushButton {
+            font-family: "Neuton";
+            font-size: 14pt;
+            border-radius: 5px;
+            background-color: #B35047;
+            border: none;
+            color:white
+        }
+        QPushButton:hover {
+            background-color: #7D2E26;
+            
+        }
+
+
+
+
+""")
+        self.savebutton.setStyleSheet("""
+  QPushButton {
+            font-family: "Neuton";
+            font-size: 10pt;
+            border-radius: 5px;
+            background-color: white;
+            border: none;
+            color:black
+        }
+        QPushButton:hover {
+            background-color: #767575;
+            
+        }
+
+
+
+
+""")
+
         #edits for the addbutton
         self.addbutton.setStyleSheet("""
         
@@ -182,7 +241,25 @@ QTableWidget::item:focus {
     def add_new(self):
         print("clicked")
         self.table.clearSelection()#clears the cell
+            # start with zero rows
+        
+            ##this is for the backend when adding value to the table
+        #self.table.setRowCount(0)
+     #   idx = self.table.rowCount()
+      #  self.table.insertRow(idx)
+       # for col, value in enumerate(data):
+        #    self.table.setItem(idx, col, QTableWidgetItem(value))
+
     
 
-    def remove_highlted_cell(self):
-        self.table.clearSelection()
+    def remove_val(self):
+        print("clicked")
+        self.table.clearSelection()#clears the cell
+
+
+    
+        
+
+    def save_value(self):
+        self.table.clearSelection()#clears the cell
+        print("clicked")
