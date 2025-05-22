@@ -374,7 +374,7 @@ QTableWidget::item:focus {
 
         #this adds combobox for the vehicle type
         self.vehicle_type_combo = QComboBox(self.addframe)
-        self.vehicle_type_combo.setGeometry(250, 50, 100, 30)
+        self.vehicle_type_combo.setGeometry(250, 50, 120, 30)
         self.vehicle_type_combo.setStyleSheet("""
     QComboBox {
         font-size: 12pt;
@@ -715,6 +715,9 @@ QTableWidget::item:focus {
         except mysql.connector.Error as err:
             print("Error loading data:", err)
 
+
+
+
     def modify_val(self):
         print("clicked")
         self.table.clearSelection()
@@ -722,6 +725,18 @@ QTableWidget::item:focus {
         self.addframe.setGeometry(100, 100, 400, 200)
         self.addframe.setStyleSheet("background-color: #E9E8E8; border-radius: 15px;")
 
+        
+        row = self.table.currentRow()
+        if row < 0:
+            QMessageBox.warning(self, "No Row Selected",
+                                    "Please select a row before clicking Modify.")
+            return
+    
+        old_ticket_id    = self.table.item(row, 2).text().strip()
+        self._old_ticket_id = old_ticket_id
+       
+        print(old_ticket_id)
+        
         shadow = QGraphicsDropShadowEffect(self)
         shadow1 = QGraphicsDropShadowEffect(self)
         shadow2 = QGraphicsDropShadowEffect(self)
@@ -745,13 +760,10 @@ QTableWidget::item:focus {
         shadow2.setColor(QColor(0, 0, 0, 160))  # semi-transparent black
 
         self.addframe.setGraphicsEffect(shadow1)
-        
-
 
         
 
-        
-        
+
 #adds a ticket inputer 
 
         self.vehicle_label = QLabel("Ticket:", self.addframe)
@@ -761,7 +773,7 @@ QTableWidget::item:focus {
 # Vehicle Type Text Field
         self.vehicle_input = QLineEdit(self.addframe)
         self.vehicle_input.setGeometry(100, 50, 130, 30)
-        
+        self.vehicle_input.setText(old_ticket_id)
 
         self.vehicle_input.setStyleSheet("""
     QLineEdit {
@@ -781,10 +793,13 @@ QTableWidget::item:focus {
       
         
 
-
+        
         #this adds combobox for the vehicle type
         self.vehicle_type_combo = QComboBox(self.addframe)
-        self.vehicle_type_combo.setGeometry(250, 50, 100, 30)
+        self.vehicle_type_combo.setGeometry(250, 50, 120, 30)
+        # 1) Read old value from the table
+        
+
         self.vehicle_type_combo.setStyleSheet("""
     QComboBox {
         font-size: 12pt;
@@ -805,12 +820,21 @@ QTableWidget::item:focus {
     }
                                               
 """)
-        self.vehicle_type_combo.addItems(["Vehicle:","     Car", "Motorcycle"])
+        self.vehicle_type_combo.addItems(["Vehicle:","Car", "Motorcycle"])
 
     # Submit button
         
 
+        old_vehicle_type = self.table.item(row, 1).text().strip()
 
+# 2) Use stripped, exact match against combo box
+        index = self.vehicle_type_combo.findText(old_vehicle_type, Qt.MatchFlag.MatchExactly)
+
+        # 3) If found, select it
+        if index >= 0:
+            self.vehicle_type_combo.setCurrentIndex(index)
+        else:
+            self.vehicle_type_combo.setCurrentIndex(0)  # fallback
         
 
         self.submit = QPushButton("Submit", self.addframe)
@@ -820,7 +844,7 @@ QTableWidget::item:focus {
         
     )
         self.submit.setGraphicsEffect(shadow)
-        self.submit.clicked.connect(self.submit_data)
+        self.submit.clicked.connect(self.modify_submit)
         
         
 
@@ -839,3 +863,84 @@ QTableWidget::item:focus {
         self.submit.show()
         self.cancel.show()
         
+
+        
+    def modify_submit(self):
+  
+
+
+        
+
+    
+        new_ticket = self.vehicle_input.text().strip()
+        new_type   = self.vehicle_type_combo.currentText().strip()
+        old_ticket = getattr(self, "_old_ticket_id", None)
+
+        if (not new_ticket) or (new_type == "Vehicle:") or (not old_ticket):
+            QMessageBox.warning(self, "Input Error",
+                                "Please enter a new TicketID and select a vehicle type.")
+            return
+
+        try:
+            conn = mysql.connector.connect(
+                host="localhost", user="root",
+                password="password", database="parkindgticketdb"
+            )
+            cur = conn.cursor()
+
+            # 1) Temporarily disable FK checks
+            cur.execute("SET FOREIGN_KEY_CHECKS = 0;")
+
+            # 2) Update all child tables so the join still works:
+            cur.execute(
+                "UPDATE acquires     SET TicketID = %s WHERE TicketID = %s",
+                (new_ticket, old_ticket)
+            )
+            cur.execute(
+                "UPDATE pays_for     SET TicketID = %s WHERE TicketID = %s",
+                (new_ticket, old_ticket)
+            )
+            cur.execute(
+                "UPDATE parkingspace SET TicketID = %s WHERE TicketID = %s",
+                (new_ticket, old_ticket)
+            )
+
+            # 3) Update the ticket itself
+            cur.execute(
+                "UPDATE ticket SET TicketID = %s WHERE TicketID = %s",
+                (new_ticket, old_ticket)
+            )
+
+            # 4) Update the vehicle type for the linked VehicleID
+            cur.execute(
+                "UPDATE vehicle v "
+                "JOIN ticket t ON v.VehicleID = t.VehicleID "
+                "SET v.TypeOfVehicle = %s "
+                "WHERE t.TicketID = %s",
+                (new_type, new_ticket)
+            )
+
+            # 5) Re-enable FK checks
+            cur.execute("SET FOREIGN_KEY_CHECKS = 1;")
+
+            conn.commit()
+
+        except mysql.connector.Error as e:
+            conn.rollback()
+            QMessageBox.critical(self, "Database Error",
+                                f"Could not update records:\n{e}")
+            return
+
+        finally:
+            cur.close()
+            conn.close()
+
+        # 6) Refresh UI and reset form
+        self.load_table_data()
+        QMessageBox.information(self, "Success",
+            f"Ticket {old_ticket} → {new_ticket}\nVehicle type: {new_type}"
+        )
+        self.submit.setText("Submit")
+        self.submit.clicked.disconnect()
+        self.submit.clicked.connect(self.submit_data)
+        self.addframe.hide()
