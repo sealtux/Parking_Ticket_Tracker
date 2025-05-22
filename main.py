@@ -4,10 +4,19 @@ from PyQt6.QtGui import QPalette, QColor,QFont,QPixmap, QIcon
 from PyQt6.QtCore import QTimer, Qt, QSize
 from PyQt6.QtGui import QMovie
 
+<<<<<<< HEAD
 from Frames.Table import MyCustomFrame
 from Frames.saves import savecustom
 from Frames.transaction import Transactionsframe
 import logic.DB 
+=======
+from Table import MyCustomFrame
+from Frames.Information import savecustom
+from Frames.Settings import Transactionsframe
+
+conn = None
+
+>>>>>>> 53ee94c (Added a new table that loads a the mysql value)
 
 class MainWindow(QWidget):
     
@@ -92,6 +101,15 @@ class MainWindow(QWidget):
         """)
         self.vehicles_rect_button.clicked.connect(self.show_vehicles_detail)
 
+<<<<<<< HEAD
+=======
+
+
+
+
+
+
+>>>>>>> 53ee94c (Added a new table that loads a the mysql value)
         # Rectangle 2: Payment Records
         self.payments_rect_button = QToolButton(self.home_overview_widget)
         self.payments_rect_button.setText("Payment Records")
@@ -113,6 +131,14 @@ class MainWindow(QWidget):
         """)
         self.payments_rect_button.clicked.connect(self.show_payments_detail)
 
+<<<<<<< HEAD
+=======
+
+
+
+
+
+>>>>>>> 53ee94c (Added a new table that loads a the mysql value)
         # Rectangle 3: Parking Space Info
         self.parking_rect_button = QToolButton(self.home_overview_widget)
         self.parking_rect_button.setText("Entry Register")
@@ -160,11 +186,40 @@ class MainWindow(QWidget):
         self.payments_table.setHorizontalHeaderLabels(["Ticket ID", "Issued Date", "License Plate"])
         self._style_home_table(self.payments_table)
 
+<<<<<<< HEAD
+=======
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> 53ee94c (Added a new table that loads a the mysql value)
         back_button_payments = QPushButton("Back", self.payments_detail_view)
         back_button_payments.setGeometry(50, 15, 100, 40)
         back_button_payments.clicked.connect(self.return_to_home_overview)
         self._style_back_button(back_button_payments)
 
+<<<<<<< HEAD
+=======
+
+
+
+
+
+
+
+
+
+>>>>>>> 53ee94c (Added a new table that loads a the mysql value)
         # Detail View 3: Parking
         self.parking_detail_view = QFrame(self.panel)
         self.parking_detail_view.setGeometry(detail_view_x, detail_view_y, panel_content_width, panel_content_height)
@@ -346,7 +401,11 @@ class MainWindow(QWidget):
             Homeicon.setPixmap(pixmap)
         Homeicon.setScaledContents(True)
 
+<<<<<<< HEAD
         Tablebutton = QPushButton("Tables",self.cornerboard) 
+=======
+        Tablebutton = QPushButton("Tables",self.cornerboard) #this adds a button to the table page
+>>>>>>> 53ee94c (Added a new table that loads a the mysql value)
         Tablebutton.setGeometry(0,170,250,35)
         Tablebutton.clicked.connect(self.show_table)
         Tableicon = QLabel(self)
@@ -354,11 +413,16 @@ class MainWindow(QWidget):
         table_icon_path = "Icons/Table.png"
         Tableicon.setScaledContents(True)
         
+<<<<<<< HEAD
         Savebutton = QPushButton("Saves",self.cornerboard)
+=======
+        Savebutton = QPushButton("FAQS",self.cornerboard)
+>>>>>>> 53ee94c (Added a new table that loads a the mysql value)
         Savebutton.setGeometry(0,240,250,35)
         Savebutton.clicked.connect(self.show_saves)
         saveicon = QLabel(self)
         saveicon.setGeometry(40,245,25,20)
+<<<<<<< HEAD
         saves_icon_path = "Icons/Saves.png"
         if os.path.exists(saves_icon_path):
             saveiconmap = QPixmap(saves_icon_path)
@@ -366,15 +430,30 @@ class MainWindow(QWidget):
         saveicon.setScaledContents(True)
 
         Transaction = QPushButton("        Transactions",self.cornerboard)
+=======
+        saveiconmap = QPixmap("Icons/Information.png")
+        saveicon.setPixmap(saveiconmap)
+        saveicon.setScaledContents(True)
+
+        Transaction = QPushButton("Settings",self.cornerboard)
+>>>>>>> 53ee94c (Added a new table that loads a the mysql value)
         Transaction.setGeometry(0,310,250,35)
         Transaction.clicked.connect(self.show_transaction)
         transactionicon = QLabel(self)
         transactionicon.setGeometry(40,315,25,20)
+<<<<<<< HEAD
         money_icon_path = "Icons/Money.png"
         if os.path.exists(money_icon_path):
             transactionmap = QPixmap(money_icon_path)
         transactionicon.setScaledContents(True)
 
+=======
+        transactionmap = QPixmap("Icons/Settings.png")
+        transactionicon.setPixmap(transactionmap)
+        transactionicon.setScaledContents(True)
+
+
+>>>>>>> 53ee94c (Added a new table that loads a the mysql value)
         button.setStyleSheet("""
         QPushButton {
             font-family: "Neuton"; font-size: 14pt; color: #6D6B6B;
@@ -407,17 +486,26 @@ class MainWindow(QWidget):
         QLabel{
         font-family: "Kavoon"; font-size: 20pt; color: #FFFFFF;                     
         }""")
+<<<<<<< HEAD
+=======
+     
+>>>>>>> 53ee94c (Added a new table that loads a the mysql value)
        
 if __name__ == "__main__":
-    try:
+    
         app = QApplication(sys.argv)
         if not os.path.exists("Icons"):
             os.makedirs("Icons")
             print("Created 'Icons' directory. Please place your icon files there.")
         window = MainWindow()
         window.show()
+       
         sys.exit(app.exec())
+<<<<<<< HEAD
     except Exception as e:
         print("Error during launch:", e)
         import traceback
         traceback.print_exc()
+=======
+   
+>>>>>>> 53ee94c (Added a new table that loads a the mysql value)

@@ -9,6 +9,7 @@ class Transactionsframe(QFrame):
         self.panel = QLabel(self)
         self.panel.setFrameShape(QFrame.Shape.StyledPanel)
         self.panel.setGeometry(0, 0, 1500, 900)
+        self.panel.setStyleSheet("background-color: #F2F2E6;")  # apply color
         # Apply a white background
         #self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         #self.setStyleSheet("background-color: white;")
