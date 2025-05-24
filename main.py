@@ -3,20 +3,19 @@ import os,sys
 from PyQt6.QtGui import QPalette, QColor,QFont,QPixmap, QIcon
 from PyQt6.QtCore import QTimer, Qt, QSize
 from PyQt6.QtGui import QMovie
-
+import mysql.connector
 from Table import MyCustomFrame
 from Frames.Information import savecustom
 from Frames.Settings import Transactionsframe
 
 conn = None
 
-
 class MainWindow(QWidget):
     
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Main Window")
-        self.setGeometry(0, 0, 1521, 1000)
+        self.setGeometry(0, 0, 1521, 1000) 
 
         self._init_bars()
         self._init_sidebar()
@@ -151,13 +150,13 @@ class MainWindow(QWidget):
         # Detail View 1: Vehicles
         self.vehicles_detail_view = QFrame(self.panel)
         self.vehicles_detail_view.setGeometry(detail_view_x, detail_view_y, panel_content_width, panel_content_height)
-        
+        global vehicles_table
         self.vehicles_table = QTableWidget(self.vehicles_detail_view)
         self.vehicles_table.setGeometry(50, 70, panel_content_width - 100, panel_content_height - 140)
         self.vehicles_table.setColumnCount(2)
         self.vehicles_table.setHorizontalHeaderLabels(["License Plate", "Type Of Vehicle"])
         self._style_home_table(self.vehicles_table)
-
+        
         back_button_vehicles = QPushButton("Back", self.vehicles_detail_view)
         back_button_vehicles.setGeometry(50, 15, 100, 40)
         back_button_vehicles.clicked.connect(self.return_to_home_overview)
@@ -207,8 +206,8 @@ class MainWindow(QWidget):
 
         self.parking_table = QTableWidget(self.parking_detail_view)
         self.parking_table.setGeometry(50, 70, panel_content_width - 100, panel_content_height - 140)
-        self.parking_table.setColumnCount(3)
-        self.parking_table.setHorizontalHeaderLabels(["Vehicle", "Ticket ID", "Entry Time"])
+        self.parking_table.setColumnCount(4)
+        self.parking_table.setHorizontalHeaderLabels(["TicketID", "EntryTime", "License_Plate","Presence Status"])
         self._style_home_table(self.parking_table)
 
         back_button_parking = QPushButton("Back", self.parking_detail_view)
@@ -305,16 +304,19 @@ class MainWindow(QWidget):
         self.home_overview_widget.hide()
         self.vehicles_detail_view.show()
         print("Displaying vehicles detail table.")
+        self.loadvehicles()
 
     def show_payments_detail(self):
         self.home_overview_widget.hide()
         self.payments_detail_view.show()
         print("Displaying payments detail table.")
+        self.loadtickets()
 
     def show_parking_detail(self):
         self.home_overview_widget.hide()
         self.parking_detail_view.show()
         print("Displaying parking detail table.")
+        self.EntryLoad()
  
     def show_table(self):
         self.panel.hide() 
@@ -392,7 +394,7 @@ class MainWindow(QWidget):
         Tableicon.setPixmap(tableiconmap)
         Tableicon.setScaledContents(True)
         
-        Savebutton = QPushButton("FAQS",self.cornerboard)
+        Savebutton = QPushButton("Moderator",self.cornerboard)
         Savebutton.setGeometry(0,240,250,35)
         Savebutton.clicked.connect(self.show_saves)
         saveicon = QLabel(self)
@@ -443,8 +445,111 @@ class MainWindow(QWidget):
         QLabel{
         font-family: "Kavoon"; font-size: 20pt; color: #FFFFFF;                     
         }""")
-     
+    
+
+    def loadvehicles(self):
+        
+        print("clicked")
+        
+        try:
+            # Step 1: Connect to MySQL
+            conn = mysql.connector.connect(
+                host="localhost",
+                user="root",
+                password="password",
+                database="parkindgticketdb"
+            )
+            cursor = conn.cursor()
+
+            # Step 2: Execute SELECT query
+            cursor.execute("SELECT License_Plate, TypeOfVehicle FROM vehicle")
+            results = cursor.fetchall()
+
+            # Step 3: Configure the table
+            self.vehicles_table.setColumnCount(2)
+            self.vehicles_table.setHorizontalHeaderLabels(["License Plate", "Type Of Vehicle"])
+            self.vehicles_table.setRowCount(len(results))
+
+            # Step 4: Populate the table
+            for row_idx, row_data in enumerate(results):
+                for col_idx, col_data in enumerate(row_data):
+                    item = QTableWidgetItem(str(col_data))
+                    self.vehicles_table.setItem(row_idx, col_idx, item)
+
+            # Cleanup
+            cursor.close()
+            conn.close()
+
+        except mysql.connector.Error as err:
+            print("Error loading data:", err)
        
+
+
+    def loadtickets(self):
+        try:
+            # Step 1: Connect to MySQL
+            conn = mysql.connector.connect(
+                host="localhost",
+                user="root",
+                password="password",
+                database="parkindgticketdb"
+            )
+            cursor = conn.cursor()
+            cursor.execute("SELECT TicketID, IssuedDate,License_Plate FROM ticket")
+            results = cursor.fetchall()
+
+            # Step 3: Configure the table
+            self.payments_table.setColumnCount(3)
+            self.payments_table.setHorizontalHeaderLabels(["Ticket ID", "Issued Date", "License Plate"])
+            self.payments_table.setRowCount(len(results))
+
+            # Step 4: Populate the table
+            for row_idx, row_data in enumerate(results):
+                for col_idx, col_data in enumerate(row_data):
+                    item = QTableWidgetItem(str(col_data))
+                    self.payments_table.setItem(row_idx, col_idx, item)
+
+            # Cleanup
+            cursor.close()
+            conn.close()
+
+        except mysql.connector.Error as err:
+            print("Error loading data:", err)
+
+
+    def EntryLoad(self):
+        print("clicked")
+        try:
+            # Step 1: Connect to MySQL
+            conn = mysql.connector.connect(
+                host="localhost",
+                user="root",
+                password="password",
+                database="parkindgticketdb"
+            )
+            cursor = conn.cursor()
+            cursor.execute("SELECT TicketID, EntryTime,License_Plate,PresenceStatus FROM acquires")
+            results = cursor.fetchall()
+
+            # Step 3: Configure the table
+            self.parking_table.setColumnCount(4)
+            self.parking_table.setHorizontalHeaderLabels(["Ticket ID", "EntryTime", "License_Plate","PresenceStatus"])
+            self.parking_table.setRowCount(len(results))
+
+            # Step 4: Populate the table
+            for row_idx, row_data in enumerate(results):
+                for col_idx, col_data in enumerate(row_data):
+                    item = QTableWidgetItem(str(col_data))
+                    self.parking_table.setItem(row_idx, col_idx, item)
+
+            # Cleanup
+            cursor.close()
+            conn.close()
+
+        except mysql.connector.Error as err:
+            print("Error loading data:", err)
+
+
 if __name__ == "__main__":
     
         app = QApplication(sys.argv)

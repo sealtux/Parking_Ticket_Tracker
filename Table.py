@@ -100,7 +100,7 @@ class MyCustomFrame(QFrame):
 
         self.table.setColumnCount(6) 
         #sets the header text
-        self.table.setHorizontalHeaderLabels(["Vehicle ID","Vehicle Type","Ticket ID", "Date","Entry Time","Payment"])
+        self.table.setHorizontalHeaderLabels(["License Plate","Vehicle Type","Ticket ID", "Date","Entry Time","Payment"])
        
 
         #sets the shadow{
@@ -343,14 +343,37 @@ QTableWidget::item:focus {
         
         
 #adds a ticket inputer 
+        self.Licenseplate = QLabel("License Plate:", self.addframe)
+        self.Licenseplate.setGeometry(100, 20, 120, 30)
+
+        self.Licenseplate_input = QLineEdit(self.addframe)
+        self.Licenseplate_input.setGeometry(230, 20, 130, 30)
+        self.Licenseplate_input.setPlaceholderText("ex.1234-ABCD")
+
+        
+        self.Licenseplate_input.setStyleSheet("""
+    QLineEdit {
+        font-size: 14pt;
+        border-radius: 5px;
+        padding: 5px;
+        background-color: #D9D9D9;
+        color: black;
+    }
+""")
+        self.Licenseplate.setStyleSheet("""
+    QLabel {
+        font-size: 14pt;
+        color: black;
+    }
+""")
 
         self.vehicle_label = QLabel("Ticket:", self.addframe)
-        self.vehicle_label.setGeometry(30, 50, 120, 30)
+        self.vehicle_label.setGeometry(30, 70, 120, 30)
         
 
 # Vehicle Type Text Field
         self.vehicle_input = QLineEdit(self.addframe)
-        self.vehicle_input.setGeometry(100, 50, 130, 30)
+        self.vehicle_input.setGeometry(100, 70, 130, 30)
         self.vehicle_input.setPlaceholderText("ex.1234-9283")
 
         self.vehicle_input.setStyleSheet("""
@@ -374,7 +397,7 @@ QTableWidget::item:focus {
 
         #this adds combobox for the vehicle type
         self.vehicle_type_combo = QComboBox(self.addframe)
-        self.vehicle_type_combo.setGeometry(250, 50, 120, 30)
+        self.vehicle_type_combo.setGeometry(250, 70, 120, 30)
         self.vehicle_type_combo.setStyleSheet("""
     QComboBox {
         font-size: 12pt;
@@ -440,24 +463,24 @@ QTableWidget::item:focus {
 
     def remove_val(self):
 
-        # 1) Which row?
+        # Which row?
         row = self.table.currentRow()
         if row < 0:
             QMessageBox.warning(self, "No Row Selected",
                                 "Please select a row before clicking Delete.")
             return
 
-        # 2) Read VehicleID (col 0) and TicketID (col 2)
+        #  Read VehicleID (col 0) and TicketID (col 2)
         veh_item = self.table.item(row, 0)
         tkt_item = self.table.item(row, 2)
         if not veh_item or not tkt_item:
             QMessageBox.critical(self, "Error",
-                                "Could not read VehicleID or TicketID from the selected row.")
+                                "Could not read License_Plate or TicketID from the selected row.")
             return
         vehicle_id = veh_item.text().strip()
         ticket_id  = tkt_item.text().strip()
 
-        # 3) Confirm with user
+        #  Confirm with user
         reply = QMessageBox.question(
             self,
             "Confirm Deletion",
@@ -484,7 +507,7 @@ QTableWidget::item:focus {
             cursor.execute("DELETE FROM ticket       WHERE TicketID = %s", (ticket_id,))
 
             # Finally the vehicle
-            cursor.execute("DELETE FROM vehicle      WHERE VehicleID = %s", (vehicle_id,))
+            cursor.execute("DELETE FROM vehicle      WHERE License_Plate = %s", (vehicle_id,))
 
             conn.commit()
 
@@ -496,7 +519,7 @@ QTableWidget::item:focus {
             cursor.close()
             conn.close()
             self.table.clearSelection()
-        # 5) Update UI
+        #  Update UI
         self.table.removeRow(row)
         QMessageBox.information(self, "Deleted",
                                 f"Vehicle {vehicle_id} and Ticket {ticket_id} were deleted.")
@@ -511,20 +534,20 @@ QTableWidget::item:focus {
 
     
     def paid_func(self):
-            # 1) Which row?
+            #  Which row?
         row = self.table.currentRow()
         if row < 0:
             QMessageBox.warning(self, "No Row Selected",
                                 "Please select a row before clicking Paid.")
             return
 
-        # 2) Read fields from the table
+        #  Read fields from the table
         vehicle_type = self.table.item(row, 1).text().strip()  # column 1 = Vehicle Type
         ticket_id    = self.table.item(row, 2).text().strip()
         date_str     = self.table.item(row, 3).text().strip()  # "YYYY-MM-DD"
         time_str     = self.table.item(row, 4).text().strip()  # "HH:MM:SS"
 
-        # 3) Parse into datetime
+        #  Parse into datetime
         try:
             entry_dt = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
         except ValueError:
@@ -550,7 +573,7 @@ QTableWidget::item:focus {
             paysfor_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
             sql = """
             INSERT INTO pays_for
-                (Paysfor_ID, VehicleID, TicketID, AmountPaid, PaymentDate)
+                (Paysfor_ID, License_Plate, TicketID, AmountPaid, PaymentDate)
             VALUES (%s, %s, %s, %s, %s)
             """
             vehicle_id = self.table.item(row, 0).text().strip()
@@ -583,9 +606,8 @@ QTableWidget::item:focus {
     def submit_data(self):
     
     # Generate VehicleID like "123ABC"
-            numbers = ''.join(random.choices(string.digits, k=3))
-            letters = ''.join(random.choices(string.ascii_uppercase, k=3))
-            VehicleID = numbers + letters  # e.g., "123ABC"
+            
+            
 
             # Generate SpaceID like "A1-Y10"
             part1 = random.choice(string.ascii_uppercase)
@@ -601,6 +623,8 @@ QTableWidget::item:focus {
             # Get values from form
             vehicle_type = self.vehicle_type_combo.currentText().strip()
             Ticket_type = self.vehicle_input.text().strip()
+            VehicleID = self.Licenseplate_input.text().strip()
+
 
             # Input validation
             if vehicle_type == "Vehicle:" or not Ticket_type:
@@ -618,21 +642,21 @@ QTableWidget::item:focus {
                 cursor = conn.cursor()
 
                 # Insert into vehicle table
-                sql_vehicle = "INSERT INTO vehicle (VehicleID, TypeofVehicle) VALUES (%s, %s)"
+                sql_vehicle = "INSERT INTO vehicle (License_Plate, TypeofVehicle) VALUES (%s, %s)"
                 cursor.execute(sql_vehicle, (VehicleID, vehicle_type))
 
                 # Insert into ticket table
-                sql_ticket = "INSERT INTO ticket (TicketID, IssuedDate, VehicleID) VALUES (%s, %s, %s)"
+                sql_ticket = "INSERT INTO ticket (TicketID, IssuedDate, License_Plate) VALUES (%s, %s, %s)"
                 cursor.execute(sql_ticket, (Ticket_type, date.today(), VehicleID))
 
                 # Insert into parkingspace table
                 sql_parking = "INSERT INTO parkingspace (SpaceID, TicketID, VehicleType) VALUES (%s, %s, %s)"
                 cursor.execute(sql_parking, (SpaceID, Ticket_type, vehicle_type))
 
-                sql_pays_for = "INSERT INTO pays_for(Paysfor_ID, VehicleID,TicketID,AmountPaid,PaymentDate) VALUES (%s, %s, %s, %s, %s)"
+                sql_pays_for = "INSERT INTO pays_for(Paysfor_ID, License_Plate,TicketID,AmountPaid,PaymentDate) VALUES (%s, %s, %s, %s, %s)"
                 cursor.execute(sql_pays_for, (paysforID, VehicleID,Ticket_type,0.00,datetime.now()))
 
-                sqlacquires = "INSERT INTO acquires(Acquires_ID, VehicleID,TicketID,EntryTime,PresenceStatus) VALUES (%s, %s, %s, %s, %s)"
+                sqlacquires = "INSERT INTO acquires(Acquires_ID, License_Plate,TicketID,EntryTime,PresenceStatus) VALUES (%s, %s, %s, %s, %s)"
                 cursor.execute(sqlacquires, (acquiresID, VehicleID,Ticket_type,datetime.now().time(),True))
 
                 # Commit changes
@@ -684,7 +708,7 @@ QTableWidget::item:focus {
             # Select each ticket only once, with latest payment if any
             cursor.execute("""
                 SELECT
-                v.VehicleID,
+                v.License_Plate,
                 v.TypeOfVehicle,
                 t.TicketID,
                 t.IssuedDate   AS `Date`,
@@ -697,7 +721,7 @@ QTableWidget::item:focus {
                     LIMIT 1
                 ) AS `Payment`
                 FROM vehicle  AS v
-                JOIN ticket   AS t  ON v.VehicleID = t.VehicleID
+                JOIN ticket   AS t  ON v.License_Plate = t.License_Plate
                 JOIN acquires AS a  ON t.TicketID  = a.TicketID
                 ORDER BY a.EntryTime DESC
             """)
@@ -724,7 +748,7 @@ QTableWidget::item:focus {
         self.addframe = QFrame(self)
         self.addframe.setGeometry(100, 100, 400, 200)
         self.addframe.setStyleSheet("background-color: #E9E8E8; border-radius: 15px;")
-
+        
         
         row = self.table.currentRow()
         if row < 0:
@@ -733,6 +757,7 @@ QTableWidget::item:focus {
             return
     
         old_ticket_id    = self.table.item(row, 2).text().strip()
+        License_Plate = self.table.item(row, 0).text().strip()
         self._old_ticket_id = old_ticket_id
        
         print(old_ticket_id)
@@ -765,14 +790,36 @@ QTableWidget::item:focus {
 
 
 #adds a ticket inputer 
+        self.Licenseplate = QLabel("License Plate:", self.addframe)
+        self.Licenseplate.setGeometry(100, 20, 120, 30)
 
+        self.Licenseplate_input = QLineEdit(self.addframe)
+        self.Licenseplate_input.setGeometry(230, 20, 130, 30)
+        self.Licenseplate_input.setPlaceholderText("ex.1234-ABCD")
+
+        self.Licenseplate_input.setText(License_Plate)
+        self.Licenseplate_input.setStyleSheet("""
+    QLineEdit {
+        font-size: 14pt;
+        border-radius: 5px;
+        padding: 5px;
+        background-color: #D9D9D9;
+        color: black;
+    }
+""")
+        self.Licenseplate.setStyleSheet("""
+    QLabel {
+        font-size: 14pt;
+        color: black;
+    }
+""")
         self.vehicle_label = QLabel("Ticket:", self.addframe)
-        self.vehicle_label.setGeometry(30, 50, 120, 30)
+        self.vehicle_label.setGeometry(30, 70, 120, 30)
         
 
 # Vehicle Type Text Field
         self.vehicle_input = QLineEdit(self.addframe)
-        self.vehicle_input.setGeometry(100, 50, 130, 30)
+        self.vehicle_input.setGeometry(100, 70, 130, 30)
         self.vehicle_input.setText(old_ticket_id)
 
         self.vehicle_input.setStyleSheet("""
@@ -796,8 +843,8 @@ QTableWidget::item:focus {
         
         #this adds combobox for the vehicle type
         self.vehicle_type_combo = QComboBox(self.addframe)
-        self.vehicle_type_combo.setGeometry(250, 50, 120, 30)
-        # 1) Read old value from the table
+        self.vehicle_type_combo.setGeometry(250, 70, 120, 30)
+        #  Read old value from the table
         
 
         self.vehicle_type_combo.setStyleSheet("""
@@ -826,11 +873,12 @@ QTableWidget::item:focus {
         
 
         old_vehicle_type = self.table.item(row, 1).text().strip()
+        
 
-# 2) Use stripped, exact match against combo box
+#  Use stripped, exact match against combo box
         index = self.vehicle_type_combo.findText(old_vehicle_type, Qt.MatchFlag.MatchExactly)
 
-        # 3) If found, select it
+        # If found, select it
         if index >= 0:
             self.vehicle_type_combo.setCurrentIndex(index)
         else:
@@ -865,15 +913,15 @@ QTableWidget::item:focus {
         
 
         
-    def modify_submit(self):
+   
   
 
 
-        
-
     
+    def modify_submit(self):
         new_ticket = self.vehicle_input.text().strip()
         new_type   = self.vehicle_type_combo.currentText().strip()
+        new_license = self.Licenseplate_input.text().strip()
         old_ticket = getattr(self, "_old_ticket_id", None)
 
         if (not new_ticket) or (new_type == "Vehicle:") or (not old_ticket):
@@ -888,16 +936,24 @@ QTableWidget::item:focus {
             )
             cur = conn.cursor()
 
-            # 1) Temporarily disable FK checks
+            # Get the old license plate before updating anything
+            cur.execute("SELECT License_Plate FROM ticket WHERE TicketID = %s", (old_ticket,))
+            result = cur.fetchone()
+            if not result:
+                QMessageBox.warning(self, "Not Found", "Ticket not found in the database.")
+                return
+            old_license = result[0]
+
+            # Temporarily disable FK checks
             cur.execute("SET FOREIGN_KEY_CHECKS = 0;")
 
-            # 2) Update all child tables so the join still works:
+            # Update all child tables so the join still works
             cur.execute(
-                "UPDATE acquires     SET TicketID = %s WHERE TicketID = %s",
+                "UPDATE acquires SET TicketID = %s WHERE TicketID = %s",
                 (new_ticket, old_ticket)
             )
             cur.execute(
-                "UPDATE pays_for     SET TicketID = %s WHERE TicketID = %s",
+                "UPDATE pays_for SET TicketID = %s WHERE TicketID = %s",
                 (new_ticket, old_ticket)
             )
             cur.execute(
@@ -905,22 +961,34 @@ QTableWidget::item:focus {
                 (new_ticket, old_ticket)
             )
 
-            # 3) Update the ticket itself
+            # Update the ticket itself
             cur.execute(
                 "UPDATE ticket SET TicketID = %s WHERE TicketID = %s",
                 (new_ticket, old_ticket)
             )
 
-            # 4) Update the vehicle type for the linked VehicleID
+            # Update the vehicle type
             cur.execute(
                 "UPDATE vehicle v "
-                "JOIN ticket t ON v.VehicleID = t.VehicleID "
+                "JOIN ticket t ON v.License_Plate = t.License_Plate "
                 "SET v.TypeOfVehicle = %s "
                 "WHERE t.TicketID = %s",
                 (new_type, new_ticket)
             )
 
-            # 5) Re-enable FK checks
+            # Update the license plate in the ticket
+            cur.execute(
+                "UPDATE ticket SET License_Plate = %s WHERE TicketID = %s",
+                (new_license, new_ticket)
+            )
+
+            # Update the license plate in the vehicle table using the previously fetched old license
+            cur.execute(
+                "UPDATE vehicle SET License_Plate = %s WHERE License_Plate = %s",
+                (new_license, old_license)
+            )
+
+            # Re-enable FK checks
             cur.execute("SET FOREIGN_KEY_CHECKS = 1;")
 
             conn.commit()
@@ -935,12 +1003,14 @@ QTableWidget::item:focus {
             cur.close()
             conn.close()
 
-        # 6) Refresh UI and reset form
+        # Refresh UI and reset form
         self.load_table_data()
         QMessageBox.information(self, "Success",
-            f"Ticket {old_ticket} → {new_ticket}\nVehicle type: {new_type}"
+            f"Ticket {old_ticket} → {new_ticket}\nVehicle type: {new_type}\nLicense plate updated to: {new_license}"
         )
         self.submit.setText("Submit")
         self.submit.clicked.disconnect()
         self.submit.clicked.connect(self.submit_data)
         self.addframe.hide()
+
+            
