@@ -646,8 +646,8 @@ QTableWidget::item:focus {
                 cursor.execute(sql_vehicle, (VehicleID, vehicle_type))
 
                 # Insert into ticket table
-                sql_ticket = "INSERT INTO ticket (TicketID, IssuedDate, License_Plate) VALUES (%s, %s, %s)"
-                cursor.execute(sql_ticket, (Ticket_type, date.today(), VehicleID))
+                sql_ticket = "INSERT INTO ticket (TicketID, IssuedDate, License_Plate, SpaceId) VALUES (%s, %s, %s, %s)"
+                cursor.execute(sql_ticket, (Ticket_type, date.today(), VehicleID, SpaceID))
 
                 # Insert into parkingspace table
                 sql_parking = "INSERT INTO parkingspace (SpaceID, TicketID, VehicleType) VALUES (%s, %s, %s)"
