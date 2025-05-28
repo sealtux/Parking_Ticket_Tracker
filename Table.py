@@ -345,8 +345,10 @@ QTableWidget::item:focus {
         global vehicle_inputID
          
         self.addbutton.setEnabled(False)
-         
+        self.deletebutton.setEnabled(False)
         self.modifybutton.setEnabled(False)
+        self.Paid.setEnabled(False)
+        self.Moderator.setEnabled(False)
 
         
         self.table.clearSelection()
@@ -807,8 +809,8 @@ QTableWidget::item:focus {
             cursor.execute(sql_ticket, (Ticket_type, date.today(), VehicleID, SpaceID))
 
             # Insert into parkingspace table
-            sql_parking = "INSERT INTO parkingspace (SpaceID, TicketID, VehicleType) VALUES (%s, %s, %s)"
-            cursor.execute(sql_parking, (SpaceID, Ticket_type, vehicle_type))
+            sql_parking = "INSERT INTO parkingspace (SpaceID, TicketID, VehicleType,License_Plate) VALUES (%s, %s, %s,%s)"
+            cursor.execute(sql_parking, (SpaceID, Ticket_type, vehicle_type, VehicleID))
 
             # Insert into pays_for table
             sql_pays_for = """
@@ -836,6 +838,10 @@ QTableWidget::item:focus {
 
             # Reset form
             self.modifybutton.setEnabled(True)
+            self.deletebutton.setEnabled(True)
+            self.Paid.setEnabled(True)
+            self.Moderator.setEnabled(True)
+
             self.ticketinput.clear()
             self.vehicle_type_combo.setCurrentIndex(0)
             self.addbutton.setEnabled(True)
@@ -858,6 +864,9 @@ QTableWidget::item:focus {
     # hide the add‑frame
         self.addbutton.setEnabled(True)
         self.modifybutton.setEnabled(True)
+        self.deletebutton.setEnabled(True)
+        self.Paid.setEnabled(True)
+        self.Moderator.setEnabled(True)
         self.addframe.hide()
     # re‑enable the Add button
         
@@ -921,6 +930,11 @@ QTableWidget::item:focus {
 
     def modify_val(self):
         self.modifybutton.setEnabled(False)
+        self.addbutton.setEnabled(False)
+        self.deletebutton.setEnabled(False)
+        self.Paid.setEnabled(False)
+        self.Moderator.setEnabled(False)
+
         print("clicked")
         self.table.clearSelection()
         self.addframe = QFrame(self)
@@ -934,6 +948,12 @@ QTableWidget::item:focus {
             self.modifybutton.setEnabled(True )
             QMessageBox.warning(self, "No Row Selected",
                                     "Please select a row before clicking Modify.")
+            
+            self.modifybutton.setEnabled(True)
+            self.addbutton.setEnabled(True)
+            self.deletebutton.setEnabled(True)
+            self.Paid.setEnabled(True)
+            self.Moderator.setEnabled(True)
                     
             return
     
@@ -1205,6 +1225,11 @@ QTableWidget::item:focus {
 
             cur.execute("SET FOREIGN_KEY_CHECKS = 1;")
             conn.commit()
+            self.deletebutton.setEnabled(True)
+            self.addbutton.setEnabled(True)
+            self.modifybutton.setEnabled(True)
+            self.Paid.setEnabled(True)
+            self.Moderator.setEnabled(True)
 
         except mysql.connector.Error as e:
             conn.rollback()
@@ -1263,6 +1288,12 @@ QTableWidget::item:focus {
 
 
     def on_moderator_mode(self):
+            self.deletebutton.setEnabled(False)
+            self.addbutton.setEnabled(False)
+            self.modifybutton.setEnabled(False)
+            self.Paid.setEnabled(False)
+            self.Moderator.setEnabled(False)
+
             password, ok = QInputDialog.getText(
             self,
             "Moderator Access",
@@ -1272,6 +1303,11 @@ QTableWidget::item:focus {
 
             if not ok or password != "password":  # Change  to your desired password
                 QMessageBox.warning(self, "Access Denied", "Incorrect password. Access denied.")
+                self.deletebutton.setEnabled(True)
+                self.addbutton.setEnabled(True)
+                self.modifybutton.setEnabled(True)
+                self.Paid.setEnabled(True)
+                self.Moderator.setEnabled(True)
                 return
     
             self.table.clearSelection()
@@ -1284,6 +1320,11 @@ QTableWidget::item:focus {
             if row < 0:
                 QMessageBox.warning(self, "No Row Selected",
                                         "Please select a row before clicking Modify.")
+                self.deletebutton.setEnabled(True)
+                self.addbutton.setEnabled(True)
+                self.modifybutton.setEnabled(True)
+                self.Paid.setEnabled(True)
+                self.Moderator.setEnabled(True)
                 return
         
             old_ticket_id    = self.table.item(row, 2).text().strip()
@@ -1493,8 +1534,7 @@ QTableWidget::item:focus {
 
 
     def submit_moderator_edit(self):
-       
-
+        
         try:
             new_ticket = self.ticketinput.text().strip()
             new_license = self.Licenseplate_input.text().strip()
@@ -1519,18 +1559,14 @@ QTableWidget::item:focus {
                 QMessageBox.warning(self, "Invalid License Plate", "License plate must be in the format ABC1234.")
                 return
 
-            # Validate date format
+            # ✅ Validate combined date & time are in the past
             try:
-                datetime.strptime(new_date, "%Y-%m-%d")
+                combined_datetime = datetime.strptime(f"{new_date} {new_time}", "%Y-%m-%d %H:%M:%S")
+                if combined_datetime > datetime.now():
+                    QMessageBox.warning(self, "Invalid Date/Time", "The date and time cannot be in the future.")
+                    return
             except ValueError:
-                QMessageBox.warning(self, "Invalid Date", "Date must be in YYYY-MM-DD format.")
-                return
-
-            # Validate time format (HH:MM:SS)
-            try:
-                datetime.strptime(new_time, "%H:%M:%S")
-            except ValueError:
-                QMessageBox.warning(self, "Invalid Time", "Time must be in HH:MM:SS (24-hour) format.")
+                QMessageBox.warning(self, "Invalid Format", "Ensure date is YYYY-MM-DD and time is HH:MM:SS (24-hour).")
                 return
 
             confirm = QMessageBox.question(
@@ -1589,7 +1625,11 @@ QTableWidget::item:focus {
             QMessageBox.information(self, "Success", "Record updated successfully.")
             self.addframe.hide()
             self.load_table_data()
-
+            self.deletebutton.setEnabled(True)
+            self.addbutton.setEnabled(True)
+            self.modifybutton.setEnabled(True)
+            self.Paid.setEnabled(True)
+            self.Moderator.setEnabled(True)
         except mysql.connector.Error as e:
             if conn:
                 conn.rollback()
@@ -1600,7 +1640,7 @@ QTableWidget::item:focus {
                 cur.close()
             if 'conn' in locals():
                 conn.close()
-           
+            
         
 
     
