@@ -345,6 +345,8 @@ QTableWidget::item:focus {
         global vehicle_inputID
          
         self.addbutton.setEnabled(False)
+         
+        self.modifybutton.setEnabled(False)
 
         
         self.table.clearSelection()
@@ -536,7 +538,7 @@ QTableWidget::item:focus {
         try:
             conn = mysql.connector.connect(
                 host="localhost", user="root",
-                password="password", database="parkindgticketdb"
+                password="password", database="parkindgticketk"
             )
             cursor = conn.cursor()
 
@@ -624,7 +626,7 @@ QTableWidget::item:focus {
         try:
             conn = mysql.connector.connect(
                 host="localhost", user="root",
-                password="password", database="parkindgticketdb"
+                password="password", database="parkindgticketk"
             )
             cur = conn.cursor()
             paysfor_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
@@ -664,7 +666,7 @@ QTableWidget::item:focus {
         try:
             conn = mysql.connector.connect(
                 host="localhost", user="root",
-                password="password", database="parkindgticketdb"
+                password="password", database="parkindgticketk"
             )
             cur = conn.cursor()
 
@@ -713,6 +715,7 @@ QTableWidget::item:focus {
     def submit_data(self):
         # Generate SpaceID like "A1-Y10"
         self.addbutton.setEnabled(True)
+        
         part1 = random.choice(string.ascii_uppercase)
         part2 = random.choice(string.digits)
         part3 = random.choice(string.ascii_uppercase)
@@ -757,7 +760,7 @@ QTableWidget::item:focus {
                 host="localhost",
                 user="root",
                 password="password",  # change as needed
-                database="parkindgticketdb"
+                database="parkindgticketk"
             )
             cursor = conn.cursor()
             conn.start_transaction()  # Start explicit transaction
@@ -832,6 +835,7 @@ QTableWidget::item:focus {
             self.load_table_data()
 
             # Reset form
+            self.modifybutton.setEnabled(True)
             self.ticketinput.clear()
             self.vehicle_type_combo.setCurrentIndex(0)
             self.addbutton.setEnabled(True)
@@ -842,6 +846,7 @@ QTableWidget::item:focus {
             cursor.close()
             conn.close()
             QMessageBox.critical(self, "Database Error", f"Error: {err}")
+            
 
 
 
@@ -872,7 +877,7 @@ QTableWidget::item:focus {
                 host="localhost",
                 user="root",
                 password="password",   # your password
-                database="parkindgticketdb"  # your DB
+                database="parkindgticketk"  # your DB
             )
             cursor = conn.cursor()
 
@@ -1097,35 +1102,29 @@ QTableWidget::item:focus {
     def modify_submit(self):
         self.modifybutton.setEnabled(True)
         new_ticket = self.ticketinput.text().strip()
-        new_type   = self.vehicle_type_combo.currentText().strip()
-        new_license = self.Licenseplate_input.text().strip()
-        
+        new_type = self.vehicle_type_combo.currentText().strip()
+        new_license = self.Licenseplate_input.text().strip().upper()
+
         old_ticket = getattr(self, "_old_ticket_id", None)
 
         if (not new_ticket) or (new_type == "Vehicle:") or (not old_ticket):
             QMessageBox.warning(self, "Input Error",
                                 "Please enter a new TicketID and select a vehicle type.")
             return
-        
-        # Validate ticket ID format
+
+        # Validate Ticket ID
         ticket_pattern = re.compile(r"^(\d{4})-(\d{4})$")
         match = ticket_pattern.match(new_ticket)
-
-        if not match:
-            QMessageBox.warning(self, "Invalid Format", "Ticket ID must be in the format DDDD-DDDD (e.g., 1234-5678).")
+        if not match or int(match.group(1)) == 0 or int(match.group(2)) == 0:
+            QMessageBox.warning(self, "Invalid Ticket ID", "Ticket ID must be in format DDDD-DDDD and not contain 0000.")
             return
 
-        left, right = int(match.group(1)), int(match.group(2))
-        if left == 0 or right == 0:
-            QMessageBox.warning(self, "Invalid Ticket ID", "Both parts of the Ticket ID must be greater than zero.")
-            return
-        
+        # Validate License Plate
         license_pattern = re.compile(r"^[A-Z]{3}\d{4}$")
         match = license_pattern.match(new_license)
-
         if not match:
             QMessageBox.warning(self, "Invalid License Plate",
-                                "License plate must be in the format LLLnNNN (e.g., ABC1234)")
+                                "License plate must be in the format LLLnNNN (e.g., ABC1234).")
             return
 
         confirm = QMessageBox.question(
@@ -1141,16 +1140,16 @@ QTableWidget::item:focus {
 
         if confirm != QMessageBox.StandardButton.Yes:
             QMessageBox.information(self, "Cancelled", "Modification cancelled.")
-
             return
 
         try:
             conn = mysql.connector.connect(
                 host="localhost", user="root",
-                password="password", database="parkindgticketdb"
+                password="password", database="parkindgticketk"
             )
             cur = conn.cursor()
 
+            # Get old license plate
             cur.execute("SELECT License_Plate FROM ticket WHERE TicketID = %s", (old_ticket,))
             result = cur.fetchone()
             if not result:
@@ -1158,52 +1157,58 @@ QTableWidget::item:focus {
                 return
 
             old_license = result[0]
-            cur.execute(
-                "UPDATE acquires SET License_Plate = %s WHERE License_Plate = %s",
-                (new_license, old_license)
-            )
+
+            # Prevent duplicate license plate assignment
+            cur.execute("""
+                SELECT t.TicketID 
+                FROM vehicle v 
+                JOIN ticket t ON v.License_Plate = t.License_Plate 
+                WHERE v.License_Plate = %s
+            """, (new_license,))
+            row = cur.fetchone()
+            if row and row[0] != old_ticket:
+                QMessageBox.warning(self, "Duplicate License Plate",
+                                    f"License plate {new_license} is already assigned to another ticket.")
+                return
+
+            # Prevent duplicate ticket ID if changing it
+            if new_ticket != old_ticket:
+                cur.execute("SELECT TicketID FROM ticket WHERE TicketID = %s", (new_ticket,))
+                existing_ticket = cur.fetchone()
+                if existing_ticket:
+                    QMessageBox.warning(self, "Duplicate Ticket ID",
+                                        f"Ticket ID {new_ticket} already exists. Please choose a different one.")
+                    return
 
             cur.execute("SET FOREIGN_KEY_CHECKS = 0;")
 
-            cur.execute(
-                "UPDATE acquires SET TicketID = %s WHERE TicketID = %s",
-                (new_ticket, old_ticket)
-            )
-            cur.execute(
-                "UPDATE pays_for SET TicketID = %s WHERE TicketID = %s",
-                (new_ticket, old_ticket)
-            )
-            cur.execute(
-                "UPDATE parkingspace SET TicketID = %s WHERE TicketID = %s",
-                (new_ticket, old_ticket)
-            )
-            cur.execute(
-                "UPDATE ticket SET TicketID = %s WHERE TicketID = %s",
-                (new_ticket, old_ticket)
-            )
-            cur.execute(
-                "UPDATE vehicle v "
-                "JOIN ticket t ON v.License_Plate = t.License_Plate "
-                "SET v.TypeOfVehicle = %s "
-                "WHERE t.TicketID = %s",
-                (new_type, new_ticket)
-            )
-            cur.execute(
-                "UPDATE ticket SET License_Plate = %s WHERE TicketID = %s",
-                (new_license, new_ticket)
-            )
-            cur.execute(
-                "UPDATE vehicle SET License_Plate = %s WHERE License_Plate = %s",
-                (new_license, old_license)
-            )
+            # Only update License_Plate if changed
+            if new_license != old_license:
+                cur.execute("UPDATE acquires SET License_Plate = %s WHERE License_Plate = %s", (new_license, old_license))
+                cur.execute("UPDATE ticket SET License_Plate = %s WHERE TicketID = %s", (new_license, old_ticket))
+                cur.execute("UPDATE vehicle SET License_Plate = %s WHERE License_Plate = %s", (new_license, old_license))
+
+            # Only update TicketID if changed
+            if new_ticket != old_ticket:
+                cur.execute("UPDATE acquires SET TicketID = %s WHERE TicketID = %s", (new_ticket, old_ticket))
+                cur.execute("UPDATE pays_for SET TicketID = %s WHERE TicketID = %s", (new_ticket, old_ticket))
+                cur.execute("UPDATE parkingspace SET TicketID = %s WHERE TicketID = %s", (new_ticket, old_ticket))
+                cur.execute("UPDATE ticket SET TicketID = %s WHERE TicketID = %s", (new_ticket, old_ticket))
+
+            # Always update vehicle type
+            cur.execute("""
+                UPDATE vehicle v
+                JOIN ticket t ON v.License_Plate = t.License_Plate
+                SET v.TypeOfVehicle = %s
+                WHERE t.TicketID = %s
+            """, (new_type, new_ticket if new_ticket != old_ticket else old_ticket))
 
             cur.execute("SET FOREIGN_KEY_CHECKS = 1;")
             conn.commit()
 
         except mysql.connector.Error as e:
             conn.rollback()
-            QMessageBox.critical(self, "Database Error",
-                                f"Could not update records:\n{e}")
+            QMessageBox.critical(self, "Database Error", f"Could not update records:\n{e}")
             return
 
         finally:
@@ -1212,12 +1217,18 @@ QTableWidget::item:focus {
 
         self.load_table_data()
         QMessageBox.information(self, "Success",
-            f"Ticket {old_ticket} → {new_ticket}\nVehicle type: {new_type}\nLicense plate updated to: {new_license}"
-        )
+                                f"Ticket {old_ticket} → {new_ticket}\n"
+                                f"Vehicle type: {new_type}\n"
+                                f"License plate updated to: {new_license}")
         self.submit.setText("Submit")
         self.submit.clicked.disconnect()
         self.submit.clicked.connect(self.submit_data)
         self.addframe.hide()
+
+
+
+
+
 
         
 
@@ -1540,7 +1551,7 @@ QTableWidget::item:focus {
                 host="localhost",
                 user="root",
                 password="password",
-                database="parkindgticketdb"
+                database="parkindgticketk"
             )
             cur = conn.cursor()
             conn.start_transaction()

@@ -659,7 +659,7 @@ class MainWindow(QWidget):
         self.vehicles_table.setRowCount(0)
         try:
             conn = mysql.connector.connect(
-                host="localhost", user="root", password="password", database="parkindgticketdb"
+                host="localhost", user="root", password="password", database="parkindgticketk"
             )
             cursor = conn.cursor()
             cursor.execute("SELECT License_Plate, TypeOfVehicle FROM vehicle")
@@ -688,7 +688,7 @@ class MainWindow(QWidget):
         self.payments_table.setRowCount(0)
         try:
             conn = mysql.connector.connect(
-                host="localhost", user="root", password="password", database="parkindgticketdb"
+                host="localhost", user="root", password="password", database="parkindgticketk"
             )
             cursor = conn.cursor()
             cursor.execute("""
@@ -723,7 +723,7 @@ class MainWindow(QWidget):
         self.parking_table.setRowCount(0)
         try:
             conn = mysql.connector.connect(
-                host="localhost", user="root", password="password", database="parkindgticketdb"
+                host="localhost", user="root", password="password", database="parkindgticketk"
             )
             cursor = conn.cursor()
             cursor.execute("SELECT TicketID, EntryTime,License_Plate,PresenceStatus FROM acquires")
@@ -801,7 +801,7 @@ class MainWindow(QWidget):
                 host="localhost",
                 user="root",
                 password="password",
-                database="parkindgticketdb"
+                database="parkindgticketk"
             )
             cursor = conn.cursor()
 
