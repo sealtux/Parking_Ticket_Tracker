@@ -712,7 +712,7 @@ QTableWidget::item:focus {
 
     def submit_data(self):
         # Generate SpaceID like "A1-Y10"
-        self.enable_all_buttons()
+        self.addbutton.setEnabled(True)
         part1 = random.choice(string.ascii_uppercase)
         part2 = random.choice(string.digits)
         part3 = random.choice(string.ascii_uppercase)
@@ -748,7 +748,7 @@ QTableWidget::item:focus {
 
         if not match:
             QMessageBox.warning(self, "Invalid License Plate",
-                                "License plate must be in the format LLLnNNN (e.g., ABC123).")
+                                "License plate must be in the format LLLnNNN (e.g., ABC1234).")
             return
         
         try:
@@ -851,6 +851,8 @@ QTableWidget::item:focus {
 
     def on_cancel(self):
     # hide the add‑frame
+        self.addbutton.setEnabled(True)
+        self.modifybutton.setEnabled(True)
         self.addframe.hide()
     # re‑enable the Add button
         
@@ -913,6 +915,7 @@ QTableWidget::item:focus {
 
 
     def modify_val(self):
+        self.modifybutton.setEnabled(False)
         print("clicked")
         self.table.clearSelection()
         self.addframe = QFrame(self)
@@ -920,10 +923,13 @@ QTableWidget::item:focus {
         self.addframe.setStyleSheet("background-color: #E9E8E8; border-radius: 15px;")
         
         
+        
         row = self.table.currentRow()
         if row < 0:
+            self.modifybutton.setEnabled(True )
             QMessageBox.warning(self, "No Row Selected",
                                     "Please select a row before clicking Modify.")
+                    
             return
     
         old_ticket_id    = self.table.item(row, 2).text().strip()
@@ -1089,7 +1095,7 @@ QTableWidget::item:focus {
 
     
     def modify_submit(self):
-        
+        self.modifybutton.setEnabled(True)
         new_ticket = self.ticketinput.text().strip()
         new_type   = self.vehicle_type_combo.currentText().strip()
         new_license = self.Licenseplate_input.text().strip()
@@ -1119,7 +1125,7 @@ QTableWidget::item:focus {
 
         if not match:
             QMessageBox.warning(self, "Invalid License Plate",
-                                "License plate must be in the format LLLnNNN (e.g., ABC123)")
+                                "License plate must be in the format LLLnNNN (e.g., ABC1234)")
             return
 
         confirm = QMessageBox.question(
